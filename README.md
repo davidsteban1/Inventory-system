@@ -47,7 +47,7 @@ The startup event calls `create_db_and_tables()`, which executes `SQLModel.metad
 | DELETE | `/items/{item_id}` | Delete an item by ID. |
 
 ## API Preview (Swagger UI)
-<img width="1154" height="369" alt="Inventory management system" src="https://github.com/user-attachments/assets/013f56f2-765e-4d4f-873a-aaa4cf4fa804" />
+<img width="1154" height="369" alt="Inventory management system" src="https://github.com/user-attachments/assets/b7d1556a-c206-4ba4-91a9-b4607824f11d" />
 
 ## How to Run
 
