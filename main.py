@@ -1,9 +1,11 @@
 from fastapi import FastAPI, status, HTTPException, Depends
 from sqlmodel import Session, select
 from database import create_db_and_tables, get_session
-from models import Item
+from models import Item, ItemUpdate
 from datetime import datetime
 from typing import List, Optional
+from auth import get_current_user
+
 
 app = FastAPI(
     title="Inventory Management System",
@@ -14,7 +16,6 @@ def on_startup():
     create_db_and_tables()
 
 
-
 # See full products list
 
 @app.get("/items", response_model=List[Item])
@@ -22,7 +23,8 @@ async def list_items(
     limit: int = 50,
     offset: int = 0,
     q: Optional[str] = None, 
-    session: Session = Depends(get_session)
+    session: Session = Depends(get_session),
+    current_user: dict = Depends(get_current_user)
     ):
 
     statement = select(Item)
@@ -39,7 +41,8 @@ async def list_items(
 @app.post("/items", response_model=Item, status_code=status.HTTP_201_CREATED)
 async def create_item(
     item: Item, 
-    session: Session = Depends(get_session)
+    session: Session = Depends(get_session),
+    current_user: dict = Depends(get_current_user)
     ):
 
     session.add(item)
@@ -53,7 +56,8 @@ async def create_item(
 @app.get("/items/{item_id}", response_model=Item)
 async def get_item(
     item_id: int,
-    session: Session = Depends(get_session)
+    session: Session = Depends(get_session),
+    current_user: dict = Depends(get_current_user)
     ):
 
     item = session.get(Item, item_id)
@@ -66,8 +70,11 @@ async def get_item(
 
 @app.put("/items/{item_id}", response_model=Item)
 async def update_item(
-    item_id: int, updated: Item,
-    session: Session = Depends(get_session)):
+    item_id: int, 
+    updated: ItemUpdate,
+    session: Session = Depends(get_session),
+    current_user: dict = Depends(get_current_user)
+    ):
 
     item = session.get(Item, item_id)
     if not item:
@@ -79,7 +86,6 @@ async def update_item(
     item.qty = updated.qty
     item.cost = updated.cost
     item.price = updated.price
-    item.updated_at = str(datetime.now())
 
     session.add(item)
     session.commit()
@@ -93,7 +99,9 @@ async def update_item(
 @app.delete("/items/{item_id}")
 async def delete_item(
     item_id: int,
-    session: Session = Depends(get_session)):
+    session: Session = Depends(get_session),
+    current_user: dict = Depends(get_current_user)
+    ):
     
     item = session.get(Item, item_id)
     if not item:
