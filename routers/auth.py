@@ -11,9 +11,12 @@ load_dotenv()
 
 SECRET = str(os.getenv("SECRET"))
 ALGORITHM = str(os.getenv("ALGORITHM"))
-AUTH_SERVICE_URL = str(os.getenv("AUTH_SERVICE_URL"))
+AUTH_SERVICE_URL = os.getenv(
+    "AUTH_SERVICE_URL", 
+    "http://127.0.0.1:8001/userdb/login"
+)
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="userdb/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl=AUTH_SERVICE_URL) 
 
 def get_current_user(token: str = Depends(oauth2_scheme)):
     credentials_exception = HTTPException(
