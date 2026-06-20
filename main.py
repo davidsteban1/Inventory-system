@@ -23,5 +23,5 @@ app.include_router(inventory.router)
 app.include_router(transactions.router)
 
 @app.get("/")
-def read_root():
+def working_ok():
     return {"message": "Welcome to the Inventory Management System"}
