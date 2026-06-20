@@ -1,5 +1,5 @@
 import os
-from fastapi import FastAPI, status, HTTPException, Depends
+from fastapi import status, HTTPException, Depends
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
 from dotenv import load_dotenv
