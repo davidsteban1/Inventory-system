@@ -6,7 +6,7 @@
 ![Uvicorn](https://img.shields.io/badge/Uvicorn-ASGI-111827)
 
 A lightweight, high-performance inventory API built with FastAPI for universal inventory management.  
-It provides full CRUD operations, automatic ID generation via PostgreSQL primary keys, pagination, and global search functionality.
+It now includes category management, inventory movements (stock in/out), sales transactions, revenue and best-seller reports, and JWT-protected endpoints.
 
 ## Tech Stack
 
@@ -17,18 +17,22 @@ It provides full CRUD operations, automatic ID generation via PostgreSQL primary
 | **Database** | PostgreSQL (Neon on AWS) | Serverless cloud relational data store. |
 | **Configuration** | python-dotenv | Secure local environment variable isolation. |
 | **ASGI Server** | Uvicorn | Fast production-ready server gateway. |
+| **Authentication** | OAuth2 + JWT (python-jose) | Protects all business endpoints using bearer tokens. |
 
 ## Project Structure
 
 ```text
 Inventory-system/
-├── .env                 # Private environment variables & database credentials
-├── .gitignore           # Specifies intentionally untracked files to ignore (e.g., .env, venv)
-├── database.py          # Neon engine connection, session lifetime & startup table schema migration
-├── main.py              # FastAPI application definitions, configuration, and CRUD HTTP endpoints
-├── models.py            # SQLModel schema definition for the Item entity mapped to PostgreSQL
-├── requirements.txt     # List of project dependencies for easy environment replication
-└── venv/                # Isolated local Python virtual environment (hidden via .gitignore)
+├── database.py          # Engine/session setup and startup table creation
+├── main.py              # FastAPI app + router registration
+├── models.py            # SQLModel entities: Category, Item, InventoryMovement, Sale, SaleInfo
+├── requirements.txt     # Project dependencies
+└── routers/
+    ├── auth.py          # JWT validation dependency
+    ├── categories.py    # Category endpoints
+    ├── items.py         # Item endpoints
+    ├── inventory.py     # Stock movement endpoints
+    └── transactions.py  # Sales + reporting endpoints
 ```
 
 ## Database Configuration
@@ -40,11 +44,29 @@ The startup event calls `create_db_and_tables()`, which executes `SQLModel.metad
 
 | Method | Route | Description |
 |---|---|---|
-| GET | `/items` | List items with optional query parameters: `limit` (default `50`), `offset` (default `0`), and `q` (partial name search). |
-| POST | `/items` | Create a new item. |
-| GET | `/items/{item_id}` | Get a single item by ID. |
-| PUT | `/items/{item_id}` | Update an existing item by ID. |
-| DELETE | `/items/{item_id}` | Delete an item by ID. |
+| POST | `/categories/create-category` | Create a category. |
+| GET | `/categories/categories-list` | List categories with pagination and optional `q` filter. |
+| POST | `/items/create-item` | Create an item linked to a category. |
+| GET | `/items/items-list` | List active items with pagination and optional `q` and `category_id` filters. |
+| GET | `/items/item-by_id/{item_id}` | Get one active item by ID. |
+| PUT | `/items/item-update/{item_id}` | Update an item by ID. |
+| PATCH | `/items/delete-item/{item_id}` | Toggle item availability (soft delete/restore). |
+| GET | `/items/inactive-items` | List inactive (soft deleted) items. |
+| POST | `/inventory/add-stock` | Increase item quantity and record an input movement. |
+| POST | `/inventory/reduce-stock` | Decrease item quantity and record an output movement. |
+| POST | `/transactions/sales` | Create a sale from a cart, reduce stock, and register movements. |
+| GET | `/transactions/sales/revenue` | Get sales count and total revenue (optional `start_date`, `end_date`). |
+| GET | `/transactions/sales/report` | Best-seller report by quantity sold (optional date range). |
+| GET | `/transactions/sales/{id}` | Fetch a sale by ID. |
+
+## Authentication
+
+All business routes above require a bearer token.  
+`routers/auth.py` validates JWTs with:
+
+- `SECRET`
+- `ALGORITHM`
+- `AUTH_SERVICE_URL` (used as `tokenUrl` in OAuth2PasswordBearer)
 
 ## API Preview (Swagger UI)
 <img width="1154" height="369" alt="Inventory management system" src="https://github.com/user-attachments/assets/b7d1556a-c206-4ba4-91a9-b4607824f11d" />
@@ -59,7 +81,7 @@ The startup event calls `create_db_and_tables()`, which executes `SQLModel.metad
 
 2. **Install dependencies**
    ```bash
-   pip install fastapi sqlmodel uvicorn psycopg2-binary
+   pip install -r requirements.txt
    ```
 
 3. **Configure the database URL**
@@ -67,6 +89,13 @@ The startup event calls `create_db_and_tables()`, which executes `SQLModel.metad
    export DATABASE_URL="postgresql://<user>:<password>@<host>/<db>?sslmode=require"
    ```
    Use your Neon PostgreSQL connection string as the `DATABASE_URL` value.
+
+   Configure auth values too:
+   ```bash
+   export SECRET="<jwt-secret>"
+   export ALGORITHM="HS256"
+   export AUTH_SERVICE_URL="/auth/login"
+   ```
 
 4. **Run the API**
    ```bash
