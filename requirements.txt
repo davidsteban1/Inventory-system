@@ -4,4 +4,4 @@ sqlmodel
 pytest
 httpx
 jinja2
-psycopg2-binary
+psycopg2-binary>=2.9.0

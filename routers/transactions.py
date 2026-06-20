@@ -15,7 +15,6 @@ router = APIRouter(prefix="/transactions", tags=["Transactions"])
 
 # Sale generator
 
-
 @router.post("/sales", response_model=Sale, status_code=status.HTTP_201_CREATED)
 async def create_sale(
     cart: SaleCreate,
@@ -69,7 +68,6 @@ async def create_sale(
 
 
 # Sales revenue
-
 
 @router.get("/sales/revenue", status_code=status.HTTP_200_OK)
 async def get_sales_revenue(
