@@ -13,7 +13,7 @@ SECRET = str(os.getenv("SECRET"))
 ALGORITHM = str(os.getenv("ALGORITHM"))
 AUTH_SERVICE_URL = os.getenv(
     "AUTH_SERVICE_URL", 
-    "http://127.0.0.1:8001/userdb/login"
+    "https://authentication-and-login-system.vercel.app/userdb/login"
 )
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=AUTH_SERVICE_URL) 
